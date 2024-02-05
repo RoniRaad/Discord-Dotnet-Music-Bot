@@ -24,6 +24,7 @@ namespace DiscordMusicBot.Modules
         [Summary("Plays a youtube or soundcloud link in your channel.")]
         public async Task PlayCommand([Remainder][Summary("The URL to play or search term")] string songInput)
         {
+            Console.WriteLine($"Recieved play command from user. Input: {songInput}");
             var channel = (Context.User as IGuildUser)?.VoiceChannel;
             var guild = channel?.Guild;
 
@@ -168,7 +169,9 @@ namespace DiscordMusicBot.Modules
 
         public async Task<SongMetadata> AddSongToQueue(GuildState guildState, string songInput)
         {
-            var url = new Url(songInput);
+			Console.WriteLine($"Added song to queue. SongInput: {songInput}");
+
+			var url = new Url(songInput);
             SongMetadata songMetadata;
 
             if (!string.IsNullOrEmpty(url.Host) || url.IsInvalid)

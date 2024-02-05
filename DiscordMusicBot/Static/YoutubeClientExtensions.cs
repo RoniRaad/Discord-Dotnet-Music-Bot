@@ -7,7 +7,9 @@ namespace DiscordMusicBot.Static
     {
 		public static async Task<Stream> GetYoutubeStream(this YoutubeClient youtubeClient, string url)
         {
-            var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(url);
+			Console.WriteLine($"Getting youtube stream. Url: {url}");
+
+			var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(url);
             var audioStreams = streamManifest.GetAudioOnlyStreams();
             var bestAudioStream = audioStreams.GetWithHighestBitrate();
 
@@ -20,7 +22,9 @@ namespace DiscordMusicBot.Static
                     stream.Dispose();
 
                     inputMemoryStream.Position = 0;
-                    return await StreamHelpers.ConvertToDiscordAudioFormat(inputMemoryStream);
+					Console.WriteLine($"Youtube stream read. Size: {inputMemoryStream.Length}");
+
+					return await StreamHelpers.ConvertToDiscordAudioFormat(inputMemoryStream);
                 }
             }
         }

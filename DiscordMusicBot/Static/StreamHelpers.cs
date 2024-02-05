@@ -30,7 +30,9 @@ namespace DiscordMusicBot.Static
 
             outputMemoryStream.Position = 0;
 
-            return outputMemoryStream;
+			Console.WriteLine($"Converted to discord audio format. Size: {outputMemoryStream.Length}");
+
+			return outputMemoryStream;
         }
 
         public static async ValueTask StreamAudioToDiscordAsync(AudioOutStream pcmStream, Stream musicStream,
@@ -38,8 +40,9 @@ namespace DiscordMusicBot.Static
         {
             var buffer = new byte[1024 * 4];
             int bytesRead;
+			Console.WriteLine($"Streaming audio to discord.");
 
-            while ((bytesRead = await musicStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+			while ((bytesRead = await musicStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
