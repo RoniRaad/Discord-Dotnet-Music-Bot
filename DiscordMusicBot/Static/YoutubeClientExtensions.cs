@@ -18,21 +18,25 @@ namespace DiscordMusicBot.Static
 			var bestAudioStream = audioStreams.GetWithHighestBitrate();
 			Console.WriteLine($"Got best audio stream Size: {bestAudioStream.Size}, Bitrate: {bestAudioStream.Bitrate}");
 
+			const int bufferSize = 81920;
+			var buffer = new byte[bufferSize];
+
+			using (var stream = await youtubeClient.Videos.Streams.GetAsync(bestAudioStream))
 			using (var inputMemoryStream = new MemoryStream())
-            {
+			{
+				int bytesRead;
+
 				Console.WriteLine($"Downloading data from youtube stream...");
-				using (var stream = await youtubeClient.Videos.Streams.GetAsync(bestAudioStream))
-                {
-                    await stream.CopyToAsync(inputMemoryStream);
-                    stream.Close();
-                    stream.Dispose();
+				while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+				{
+					await inputMemoryStream.WriteAsync(buffer, 0, bytesRead);
+				}
 
-                    inputMemoryStream.Position = 0;
-					Console.WriteLine($"Youtube stream read. Size: {inputMemoryStream.Length}");
+				inputMemoryStream.Position = 0;
+				Console.WriteLine($"Youtube stream read. Size: {inputMemoryStream.Length}");
 
-					return await StreamHelpers.ConvertToDiscordAudioFormat(inputMemoryStream);
-                }
-            }
-        }
+				return await StreamHelpers.ConvertToDiscordAudioFormat(inputMemoryStream);
+			}
+		}
     }
 }
