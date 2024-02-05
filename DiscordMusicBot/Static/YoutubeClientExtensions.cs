@@ -10,12 +10,18 @@ namespace DiscordMusicBot.Static
 			Console.WriteLine($"Getting youtube stream. Url: {url}");
 
 			var streamManifest = await youtubeClient.Videos.Streams.GetManifestAsync(url);
-            var audioStreams = streamManifest.GetAudioOnlyStreams();
-            var bestAudioStream = audioStreams.GetWithHighestBitrate();
+			Console.WriteLine($"Got youtube stream manifest. Streams: {streamManifest.Streams.Count}");
 
-            using (var inputMemoryStream = new MemoryStream())
+			var audioStreams = streamManifest.GetAudioOnlyStreams();
+			Console.WriteLine($"Got youtube audio streams. Streams: {streamManifest.Streams.Count}");
+
+			var bestAudioStream = audioStreams.GetWithHighestBitrate();
+			Console.WriteLine($"Got best audio stream Size: {bestAudioStream.Size}, Bitrate: {bestAudioStream.Bitrate}");
+
+			using (var inputMemoryStream = new MemoryStream())
             {
-                using (var stream = await youtubeClient.Videos.Streams.GetAsync(bestAudioStream))
+				Console.WriteLine($"Downloading data from youtube stream...");
+				using (var stream = await youtubeClient.Videos.Streams.GetAsync(bestAudioStream))
                 {
                     await stream.CopyToAsync(inputMemoryStream);
                     stream.Close();
