@@ -1,41 +1,42 @@
 ﻿using Discord.Audio;
-using FFMpegCore.Enums;
-using FFMpegCore.Pipes;
-using FFMpegCore;
-using SoundCloudExplode;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using YoutubeExplode;
-using YoutubeExplode.Videos.Streams;
+using System.Diagnostics;
 
 namespace DiscordMusicBot.Static
 {
     public static class StreamHelpers
     {
-        public static async Task<Stream> ConvertToDiscordAudioFormat(Stream inputStream)
-        {
-            var outputMemoryStream = new MemoryStream();
+		public static async Task<Stream> ConvertToDiscordAudioFormat(Stream inputStream)
+		{
+			var outputMemoryStream = new MemoryStream();
 
-            await FFMpegArguments.FromPipeInput(new StreamPipeSource(inputStream))
-            .OutputToPipe(new StreamPipeSink(outputMemoryStream), options => options
-                .WithCustomArgument("-hide_banner")
-                .WithAudioSamplingRate(48000)
-                .WithCustomArgument("-f s16le")
-                .ForceFormat("s16le"))
-            .WithLogLevel(FFMpegLogLevel.Panic)
-            .ProcessAsynchronously();
+			var processStartInfo = new ProcessStartInfo
+			{
+				FileName = "ffmpeg",
+				Arguments = "-hide_banner -loglevel panic -i pipe:0 -ar 48000 -f s16le -acodec pcm_s16le pipe:1",
+				RedirectStandardInput = true,
+				RedirectStandardOutput = true,
+				UseShellExecute = false,
+				CreateNoWindow = true,
+			};
 
-            outputMemoryStream.Position = 0;
+			using (var process = new Process { StartInfo = processStartInfo })
+			{
+				process.Start();
 
-			Console.WriteLine($"Converted to discord audio format. Size: {outputMemoryStream.Length}");
+				var inputTask = inputStream.CopyToAsync(process.StandardInput.BaseStream);
+				var closeTask = inputTask.ContinueWith(task => process.StandardInput.Close());
 
-			return outputMemoryStream;
-        }
+				var outputTask = process.StandardOutput.BaseStream.CopyToAsync(outputMemoryStream);
 
-        public static async ValueTask StreamAudioToDiscordAsync(AudioOutStream pcmStream, Stream musicStream,
+				await Task.WhenAll(process.WaitForExitAsync(), inputTask, outputTask, closeTask);
+
+				outputMemoryStream.Position = 0;
+
+				return outputMemoryStream;
+			}
+		}
+
+		public static async ValueTask StreamAudioToDiscordAsync(AudioOutStream pcmStream, Stream musicStream,
             CancellationToken cancellationToken)
         {
             var buffer = new byte[1024 * 4];

@@ -54,12 +54,12 @@ namespace DiscordMusicBot.Modules
 
         [Command("stop")]
         [Summary("Skips the currently playing song.")]
-        public async Task StopCommand()
+        public Task StopCommand()
         {
             var channel = (Context.User as IGuildUser)?.VoiceChannel;
             var guild = channel?.Guild;
 
-            if (channel is null || guild is null) { return; }
+            if (channel is null || guild is null) { return Task.CompletedTask; }
 
             if (GuildStates.TryGetValue(guild.Id, out var guildState))
             {
@@ -67,7 +67,9 @@ namespace DiscordMusicBot.Modules
 
                 cancellationToken?.Cancel();
             }
-        }
+
+			return Task.CompletedTask;
+		}
 
         [Command("skip")]
         [Summary("Skips the currently playing song.")]

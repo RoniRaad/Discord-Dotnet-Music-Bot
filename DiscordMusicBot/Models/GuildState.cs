@@ -1,7 +1,4 @@
-﻿using AngleSharp.Dom;
-using DiscordMusicBot.Modules;
-
-namespace DiscordMusicBot.Models
+﻿namespace DiscordMusicBot.Models
 {
     public class GuildState
     {
