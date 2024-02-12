@@ -71,7 +71,59 @@ namespace DiscordMusicBot.Modules
 			return Task.CompletedTask;
 		}
 
-        [Command("skip")]
+		[Command("remove")]
+		[Summary("Removes the number from the queue.")]
+		public Task RemoveCommand(int songNumber)
+		{
+			var channel = (Context.User as IGuildUser)?.VoiceChannel;
+			var guild = channel?.Guild;
+
+			if (channel is null || guild is null) { return Task.CompletedTask; }
+
+			if (GuildStates.TryGetValue(guild.Id, out var guildState))
+			{
+                var removeIndex = songNumber - 1;
+                if (guildState.SongQueue.Count < removeIndex || removeIndex < 0)
+                    return Task.CompletedTask;
+
+                var newQueue = new Queue<SongMetadata>();
+                var songQueueList = guildState.SongQueue.ToList();
+                songQueueList.RemoveAt(removeIndex);
+                songQueueList.ForEach(newQueue.Enqueue);
+				guildState.SongQueue = newQueue;
+			}
+
+			return Task.CompletedTask;
+		}
+
+		[Command("queue", RunMode = RunMode.Async)]
+		[Summary("Gets the current queue and all its songs.")]
+		public async Task GetQueueCommand()
+		{
+            const string lineFormat = "{0}. {1} by {2}";
+			var channel = (Context.User as IGuildUser)?.VoiceChannel;
+			var guild = channel?.Guild;
+
+			if (channel is null || guild is null) { return; }
+
+			if (GuildStates.TryGetValue(guild.Id, out var guildState))
+			{
+                var queueItems = guildState.SongQueue.ToList();
+                var responseMessageBuilder = new StringBuilder();
+
+                for ( var i = 0; i < queueItems.Count; i++)
+                {
+                    var formattedString = string.Format(lineFormat, i, queueItems[i].Title, queueItems[i].Author);
+					responseMessageBuilder.AppendLine(formattedString);
+				}
+
+				await Context.Channel.SendMessageAsync(responseMessageBuilder.ToString(), flags: MessageFlags.SuppressEmbeds);
+			}
+
+			return;
+		}
+
+		[Command("skip")]
         [Summary("Skips the currently playing song.")]
         public async Task SkipCommand()
         {
@@ -90,7 +142,7 @@ namespace DiscordMusicBot.Modules
             videos.ForEach(x =>
             {
 				responseBuilder.AppendLine($"{x.Title}");
-				responseBuilder.AppendLine($"{x.Url}");
+				responseBuilder.AppendLine($"!play {x.Url}");
 				responseBuilder.AppendLine("");
 			});
 
@@ -109,7 +161,7 @@ namespace DiscordMusicBot.Modules
 			tracks.ForEach(x =>
 			{
 				responseBuilder.AppendLine($"{x.Title}");
-				responseBuilder.AppendLine($"{x.Url}");
+				responseBuilder.AppendLine($"!play {x.Url}");
 				responseBuilder.AppendLine("");
 			});
 
@@ -201,6 +253,8 @@ namespace DiscordMusicBot.Modules
 			{
 				case "www.youtube.com":
 				case "youtube.com":
+                case "youtu.be":
+                case "m.youtube.com":
 					var videoInfo = await _youtubeClient.Videos.GetAsync(url.ToString());
 					metadata.Author = videoInfo?.Author?.ChannelTitle;
 					metadata.Title = videoInfo?.Title;
