@@ -97,7 +97,7 @@ namespace DiscordMusicBot.Modules
 			}
 
 
-			return Task.CompletedTask;
+			return;
 		}
 
 		[Command("queue", RunMode = RunMode.Async)]
