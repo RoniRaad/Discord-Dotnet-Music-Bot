@@ -73,25 +73,29 @@ namespace DiscordMusicBot.Modules
 
 		[Command("remove")]
 		[Summary("Removes the number from the queue.")]
-		public Task RemoveCommand(int songNumber)
+		public async Task RemoveCommand(int songNumber)
 		{
 			var channel = (Context.User as IGuildUser)?.VoiceChannel;
 			var guild = channel?.Guild;
 
-			if (channel is null || guild is null) { return Task.CompletedTask; }
+			if (channel is null || guild is null) { return; }
 
 			if (GuildStates.TryGetValue(guild.Id, out var guildState))
 			{
                 var removeIndex = songNumber - 1;
                 if (guildState.SongQueue.Count < removeIndex || removeIndex < 0)
-                    return Task.CompletedTask;
+                    return;
 
                 var newQueue = new Queue<SongMetadata>();
                 var songQueueList = guildState.SongQueue.ToList();
+                var songToRemove = songQueueList.ElementAt(removeIndex);
                 songQueueList.RemoveAt(removeIndex);
                 songQueueList.ForEach(newQueue.Enqueue);
 				guildState.SongQueue = newQueue;
+				
+                await Context.Channel.SendMessageAsync($"Removed {songToRemove.Title}", flags: MessageFlags.SuppressEmbeds);
 			}
+
 
 			return Task.CompletedTask;
 		}
