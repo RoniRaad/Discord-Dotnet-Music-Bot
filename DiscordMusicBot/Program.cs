@@ -2,7 +2,6 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordMusicBot.Handlers;
-using DiscordMusicBot.Models;
 using DiscordMusicBot.Modules;
 
 DiscordSocketClient _client;
@@ -33,29 +32,28 @@ _client.UserVoiceStateUpdated += _client_UserVoiceStateUpdated;
 
 async Task _client_UserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
 {
-	if (arg2.VoiceChannel is null || arg3.VoiceChannel is not null)
+	var userLeftChannel = arg3.VoiceChannel is null;
+	var channelIsNowEmpty = arg2.VoiceChannel?.Users.Count(x => !x.IsBot && x.Id != arg1.Id) == 0;
+
+	if (!userLeftChannel
+		|| !channelIsNowEmpty
+		|| !MusicCommandModule.GuildStates.TryGetValue(arg2.VoiceChannel.Guild.Id, out var guildState)
+		|| guildState?.AudioState?.ChannelId is null
+	)
 		return;
 
 	var channel = (IVoiceChannel)arg2.VoiceChannel;
 	var guild = channel?.Guild;
-	if (guild is null)
+	var userLists = await channel.GetUsersAsync().ToListAsync();
+	var users = userLists?.FirstOrDefault()?.ToList();
+	users?.RemoveAll(x => x.Id == arg1.Id || x.IsBot);
+	if (users?.Count != 0)
 		return;
 
-	var guildId = guild.Id;
+	guildState?.AudioState?.Client?.Dispose();
+	MusicCommandModule.GuildStates.Remove(arg2.VoiceChannel.Guild.Id);
 
-	if (MusicCommandModule.GuildStates.TryGetValue(guildId, out var guildState)
-		&& guildState?.AudioState?.ChannelId is not null)
-	{
-		var userLists = await channel.GetUsersAsync().ToListAsync();
-		var users = userLists?.FirstOrDefault()?.ToList();
-		users?.RemoveAll(x => x.Id == arg1.Id);
-
-		if (users?.Count != 1)
-			return;
-
-		guildState?.AudioState?.Client?.Dispose();
-		MusicCommandModule.GuildStates.Remove(guildId);
-	}
+	return;
 }
 
 var commandService = new CommandService();
