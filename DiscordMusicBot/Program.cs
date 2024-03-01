@@ -42,14 +42,6 @@ async Task _client_UserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2,
 	)
 		return;
 
-	var channel = (IVoiceChannel)arg2.VoiceChannel;
-	var guild = channel?.Guild;
-	var userLists = await channel.GetUsersAsync().ToListAsync();
-	var users = userLists?.FirstOrDefault()?.ToList();
-	users?.RemoveAll(x => x.Id == arg1.Id || x.IsBot);
-	if (users?.Count != 0)
-		return;
-
 	guildState?.AudioState?.Client?.Dispose();
 	MusicCommandModule.GuildStates.Remove(arg2.VoiceChannel.Guild.Id);
 
