@@ -5,6 +5,8 @@ using DiscordMusicBot.Handlers;
 using DiscordMusicBot.Modules;
 
 DiscordSocketClient _client;
+
+Console.WriteLine("Starting Version: 0.5");
 Task Log(LogMessage msg)
 {
 	Console.WriteLine(msg.ToString());
