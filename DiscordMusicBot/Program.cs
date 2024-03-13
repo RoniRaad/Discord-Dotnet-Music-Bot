@@ -30,22 +30,22 @@ await _client.LoginAsync(TokenType.Bot, token);
 await _client.StartAsync();
 _client.UserVoiceStateUpdated += _client_UserVoiceStateUpdated;
 
-async Task _client_UserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
+Task _client_UserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
 {
 	var userLeftChannel = arg3.VoiceChannel is null;
-	var channelIsNowEmpty = arg2.VoiceChannel?.Users.Count(x => !x.IsBot && x.Id != arg1.Id) == 0;
+	var channelIsNowEmpty = arg2.VoiceChannel?.ConnectedUsers.Count(x => !x.IsBot && x.Id != arg1.Id) == 0;
 
 	if (!userLeftChannel
 		|| !channelIsNowEmpty
 		|| !MusicCommandModule.GuildStates.TryGetValue(arg2.VoiceChannel.Guild.Id, out var guildState)
 		|| guildState?.AudioState?.ChannelId is null
 	)
-		return;
+		return Task.CompletedTask;
 
 	guildState?.AudioState?.Client?.Dispose();
 	MusicCommandModule.GuildStates.Remove(arg2.VoiceChannel.Guild.Id);
 
-	return;
+	return Task.CompletedTask;
 }
 
 var commandService = new CommandService();
