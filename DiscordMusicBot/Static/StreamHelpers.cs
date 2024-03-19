@@ -1,4 +1,5 @@
-﻿using Discord.Audio;
+﻿using CliWrap;
+using Discord.Audio;
 using System.Diagnostics;
 
 namespace DiscordMusicBot.Static
@@ -12,7 +13,7 @@ namespace DiscordMusicBot.Static
 			var processStartInfo = new ProcessStartInfo
 			{
 				FileName = "ffmpeg",
-				Arguments = "-hide_banner -loglevel panic -i pipe:0 -ar 48000 -f s16le -acodec pcm_s16le pipe:1",
+				Arguments = "-hide_banner -loglevel panic -i pipe:0 -af loudnorm=I=-23:LRA=7:tp=-2 -ar 48000 -acodec pcm_s16le -f s16le pipe:1",
 				RedirectStandardInput = true,
 				RedirectStandardOutput = true,
 				UseShellExecute = false,
