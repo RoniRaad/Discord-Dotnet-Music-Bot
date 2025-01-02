@@ -285,7 +285,7 @@ namespace DiscordMusicBot.Modules
 				if (currentQueueCount > 1)
 					messageBuilder.Append($"Added {queuedUrl.Title}");
                 else
-					messageBuilder.Append($"Playing {queuedUrl.Title} by");
+					messageBuilder.Append($"Playing {queuedUrl.Title}");
 
 				if (queuedUrl.Author is not null)
 				{
